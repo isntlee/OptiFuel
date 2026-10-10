@@ -1,10 +1,11 @@
 # **OptiFuel**
 
-This is a FastAPI based job processor that estimates the fuel a flight will burn. A client submits a flight plan, the service works out the fuel for the route using that airline's own model and the current wind, and saves the result against a job ID. It is the "Part 2" proof of concept for the OptiFuel service: event-driven in shape, with one model per airline, and built so the parts that change in production can be swapped without touching the rest.
+This is a FastAPI based job processor that estimates the fuel a flight will burn. A client submits a flight plan, the service works out the fuel for the route using that airline's own model and the current wind, and saves the result against a job ID. It is a proof of concept for the OptiFuel service: event-driven in shape, with one model per airline, and built so the parts that change in production can be swapped without touching the rest.
 
 <br>
 
 - [**Table of Contents:**](#table-of-contents)
+  - [**Architecture**](#architecture)
   - [**Features**](#features)
   - [**Explanations**](#explanations)
   - [**Technologies**](#technologies)
@@ -14,6 +15,14 @@ This is a FastAPI based job processor that estimates the fuel a flight will burn
   - [**Assumptions and stand-ins**](#assumptions-and-stand-ins)
   - [**Not built**](#not-built)
   - [**How it would grow**](#how-it-would-grow)
+
+<br>
+
+## Architecture:
+
+The production design for the OptiFuel service, Part 1 of the brief. The code in this repository is Part 2, the job processor: the "Job processors" box in this diagram, built so it can be dropped into this design.
+
+![OptiFuel high-level architecture](optifuel_architecture.svg)
 
 <br>
 
@@ -62,7 +71,7 @@ This is a FastAPI based job processor that estimates the fuel a flight will burn
   }
   ```
 - FastAPI's generated documentation is at `/docs` when the service is running.
-  
+
 **Job statuses**
 
 - `pending` - Accepted, not yet processed.
@@ -116,7 +125,7 @@ This is a FastAPI based job processor that estimates the fuel a flight will burn
 
 **Testing suite**
 
-- Three tests through the real HTTP routes, each with its own empty database. To run them, use this command in the terminal:
+- Three tests through the real HTTP routes, each with its own empty database, plus one that checks the layer rules and one that races eight workers on the guarded save. To run them, use this command in the terminal:
   ```
   uv run pytest
   ```
@@ -156,8 +165,8 @@ These notes develop on the more interesting parts of the project
   ```
 
   1. Check allowed. Is the aircraft type enabled, and does the airline have a model? If not, the job is rejected with a reason.
-  2. Get weather. One call. On failure, no wind and a warning.
-  3. Load model. From the cache, or from the file on first use.
+  2. Load model. From the cache, or from the file on first use.
+  3. Get weather. One call. On failure, no wind and a warning.
   4. Calculate. Turn route, wind and model into fuel.
 - Steps 1 to 3 reach outside the process. Step 4 does not. In production the job processor would do steps 1 to 3 and hand step 4 to Ray, and the calculation function would move there unchanged.
 
@@ -166,6 +175,7 @@ These notes develop on the more interesting parts of the project
 **The message handler**
 
 - One function, `handle_message`, in the service layer. It is what a queue consumer would call in production. In this demo, the submit route schedules it as a FastAPI background task. See location:
+
   ```
   src/job_processor/service/handler.py
   ```
@@ -317,11 +327,16 @@ Please note - in order to run this container on your system, you will need Docke
    ```
    uv run pytest
    ```
-2. The three tests go through the real HTTP routes with FastAPI's test client. Each builds its own app with an empty SQLite database in a temporary folder.
+2. Three tests go through the real HTTP routes with FastAPI's test client. Each builds its own app with an empty SQLite database in a temporary folder.
 
    - A normal flight plan gives the right fuel total. One degree east along the equator at 240 km/h and no wind is 2,779.9 lb with the ABC stand-in model.
    - A disabled aircraft type is accepted with 202, then rejected with a reason naming the type.
    - A weather failure still gives a result, with the warning `no weather available`.
+
+   Two more check claims made in the Explanations above:
+
+   - Each layer imports only what the layer rules allow. The test parses every source file.
+   - Only one of eight workers racing to save the same job succeeds.
 3. Run the formatter, linter and type checker:
 
    ```
@@ -375,16 +390,17 @@ A job and its result are the same row. Every read for a client is scoped by airl
 
 **Stand-ins**
 
-- The two models are placeholders. Each returns one fixed fuel flow whatever the speed and altitude: 6,000 lb per hour for ABC and 5,000 for XYZ. They exist so it can be seen that the right model is picked. Nothing from Exercise 1 is used.
+- The two models are placeholders. Each returns one fixed fuel flow whatever the speed and altitude: 6,000 lb per hour for ABC and 5,000 for XYZ. They exist so it can be seen that the right model is picked.
 - Weather is a fake by default, with three settings: `no_wind`, `calm` (10 knots from the east) and `strong` (40 knots from the east). The HTTP client is written against an assumed service.
 - Background work in the same process stands in for a queue. It is not durable: a job accepted just before the process stops is lost. In production a durable queue sits between submit and the handler, and the handler is what the queue consumer calls.
 - The `X-Airline` header stands in for a login token.
+- Rejecting a disabled aircraft type or an unknown airline inside the job processor is a demo shortcut. The production design in the diagram handles this outside the worker, so its step list does not show it.
 
 <br>
 
 ## Not built:
 
-- A real queue. Login. Kubernetes files. Real models. Retries. Async code. A migration tool. Exercise 1.
+- A real queue. Login. Kubernetes files. Real models. Retries. Async code. A migration tool.
 
 <br>
 
