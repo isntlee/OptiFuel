@@ -31,7 +31,7 @@ def create_app(
         ),
         weather_client=weather_client or make_weather_client(settings),
     )
-    app = FastAPI(title="OptiFlight job processor")
+    app = FastAPI(title="OptiFuel job processor")
     app.state.shared = shared
     app.include_router(health.router)
     app.include_router(jobs.router)

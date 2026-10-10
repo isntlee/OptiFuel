@@ -1,4 +1,4 @@
-# **OptiFlight**
+# **OptiFuel**
 
 This is a FastAPI based job processor that estimates the fuel a flight will burn. A client submits a flight plan, the service works out the fuel for the route using that airline's own model and the current wind, and saves the result against a job ID. It is the "Part 2" proof of concept for the OptiFuel service: event-driven in shape, with one model per airline, and built so the parts that change in production can be swapped without touching the rest.
 
@@ -266,8 +266,8 @@ Please note - in order to run this project locally on your own system, you will 
 1. Clone the repository and move into it:
 
    ```
-   git clone https://github.com/isntlee/OptiFlight.git
-   cd OptiFlight
+   git clone https://github.com/isntlee/OptiFuel.git
+   cd OptiFuel
    ```
 2. Install the environment, including Python 3.12 if it is missing:
 
