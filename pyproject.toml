@@ -17,6 +17,7 @@ dev = [
     "pytest",
     "ruff",
     "mypy",
+    "httpx2>=2.13.1",
 ]
 
 # Without a build system, uv installs the dependencies but not this package,
