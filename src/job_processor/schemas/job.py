@@ -35,3 +35,10 @@ class JobOutcome(BaseModel):
     warnings: list[str] = []
     model_id: str | None = None
     model_version: str | None = None
+
+
+class JobAccepted(BaseModel):
+    """The reply to a submit. The client fetches the result later with the job ID."""
+
+    job_id: str
+    status: Literal["pending"] = "pending"
