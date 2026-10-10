@@ -1,0 +1,188 @@
+<svg viewBox="0 0 1160 1490" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="diagram-title">
+  <title id="diagram-title">OptiFuel: high-level architecture</title>
+
+  <defs>
+    <style>
+      .box { stroke: #2c3e50; stroke-width: 2; }
+      .api-box { fill: #e8f5e9; }
+      .queue-box { fill: #fff8e1; }
+      .dedicated-box { fill: url(#hatch); }
+      .dead-letter-box { fill: #ffebee; }
+      .processor-box { fill: #e3f2fd; }
+      .ray-box { fill: #e0f2f1; }
+      .storage-box { fill: #f3e5f5; }
+      .monitoring-box { fill: #eceff1; }
+      .external { fill: #fff3e0; stroke: #ff9800; stroke-width: 2; stroke-dasharray: 5,5; }
+      .flow { stroke: #34495e; stroke-width: 2; fill: none; }
+      .failure { stroke: #c62828; stroke-width: 2; fill: none; stroke-dasharray: 7,5; }
+      .arrow { fill: #34495e; }
+      .arrow-failure { fill: #c62828; }
+      .heading { font-family: Arial, sans-serif; font-size: 22px; font-weight: bold; fill: #2c3e50; }
+      .title-text { font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; fill: #2c3e50; }
+      .label-text { font-family: Arial, sans-serif; font-size: 13px; fill: #555; }
+      .note-text { font-family: Arial, sans-serif; font-size: 12px; fill: #777; }
+      .step-text { font-family: Arial, sans-serif; font-size: 13px; fill: #2c3e50; }
+      .arrow-label { font-family: Arial, sans-serif; font-size: 12px; fill: #34495e; }
+      .failure-label { font-family: Arial, sans-serif; font-size: 12px; fill: #c62828; }
+    </style>
+
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" class="arrow"/>
+    </marker>
+    <marker id="arrowhead-failure" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" class="arrow-failure"/>
+    </marker>
+
+    <pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="10" height="10" fill="#fff8e1"/>
+      <line x1="0" y1="0" x2="0" y2="10" stroke="#ffe0b2" stroke-width="3"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="1160" height="1490" fill="#ffffff"/>
+
+  <!-- Title -->
+  <text x="580" y="42" class="heading" text-anchor="middle">OptiFuel: high-level architecture</text>
+
+  <!-- Airline (outside) -->
+  <rect x="200" y="70" width="200" height="60" rx="5" class="external"/>
+  <text x="300" y="98" class="title-text" text-anchor="middle">Airline</text>
+  <text x="300" y="117" class="note-text" text-anchor="middle">client</text>
+
+  <!-- Airline to API -->
+  <path d="M 300 130 L 300 200" class="flow" marker-end="url(#arrowhead)"/>
+  <text x="315" y="160" class="arrow-label">flight plan in, job ID out</text>
+  <text x="315" y="178" class="arrow-label">job ID in, result out</text>
+
+  <!-- API -->
+  <rect x="80" y="210" width="440" height="100" rx="5" class="box api-box"/>
+  <text x="300" y="243" class="title-text" text-anchor="middle">API (FastAPI)</text>
+  <text x="300" y="266" class="label-text" text-anchor="middle">takes flight plans, returns results</text>
+  <text x="300" y="288" class="note-text" text-anchor="middle">routes by airline; per-airline limit</text>
+
+  <!-- API to database -->
+  <path d="M 520 260 L 710 260" class="flow" marker-end="url(#arrowhead)"/>
+  <text x="615" y="250" class="arrow-label" text-anchor="middle">record job</text>
+  <text x="615" y="278" class="arrow-label" text-anchor="middle">read result</text>
+
+  <!-- Database (cylinder) -->
+  <path d="M 720 217 L 720 303 A 180 12 0 0 0 1080 303 L 1080 217" class="box storage-box"/>
+  <ellipse cx="900" cy="217" rx="180" ry="12" class="box storage-box"/>
+  <text x="900" y="258" class="title-text" text-anchor="middle">Database (PostgreSQL)</text>
+  <text x="900" y="281" class="label-text" text-anchor="middle">jobs and results, tagged by airline</text>
+
+  <!-- API to queues -->
+  <path d="M 180 310 L 180 380" class="flow" marker-end="url(#arrowhead)"/>
+  <text x="192" y="350" class="arrow-label">event</text>
+  <path d="M 420 310 L 420 380" class="flow" marker-end="url(#arrowhead)"/>
+  <text x="432" y="350" class="arrow-label">event</text>
+
+  <!-- Shared queue -->
+  <rect x="80" y="390" width="200" height="90" rx="5" class="box queue-box"/>
+  <text x="180" y="421" class="title-text" text-anchor="middle">Shared queue</text>
+  <text x="180" y="443" class="label-text" text-anchor="middle">(RabbitMQ)</text>
+  <text x="180" y="463" class="note-text" text-anchor="middle">default</text>
+
+  <!-- Dedicated queues -->
+  <rect x="320" y="390" width="200" height="90" rx="5" class="box dedicated-box"/>
+  <text x="420" y="421" class="title-text" text-anchor="middle">Dedicated queues</text>
+  <text x="420" y="443" class="label-text" text-anchor="middle">(RabbitMQ)</text>
+  <text x="420" y="463" class="note-text" text-anchor="middle">chosen airlines</text>
+
+  <!-- Failure path: queues to dead-letter queue -->
+  <path d="M 520 435 L 710 435" class="failure" marker-end="url(#arrowhead-failure)"/>
+  <text x="615" y="424" class="failure-label" text-anchor="middle">after repeated failures</text>
+  <text x="615" y="454" class="failure-label" text-anchor="middle">from any queue</text>
+
+  <!-- Dead-letter queue -->
+  <rect x="720" y="390" width="280" height="90" rx="5" class="box dead-letter-box"/>
+  <text x="860" y="421" class="title-text" text-anchor="middle">Dead-letter queue</text>
+  <text x="860" y="443" class="label-text" text-anchor="middle">(RabbitMQ)</text>
+  <text x="860" y="463" class="note-text" text-anchor="middle">job marked failed</text>
+
+  <!-- Queues to job processors -->
+  <path d="M 180 480 L 180 520 L 420 520 L 420 480" class="flow"/>
+  <path d="M 300 520 L 300 570" class="flow" marker-end="url(#arrowhead)"/>
+  <text x="315" y="552" class="arrow-label">events, taken from each queue in turn</text>
+
+  <!-- Job processors (larger box) -->
+  <rect x="80" y="580" width="440" height="250" rx="5" class="box processor-box"/>
+  <text x="300" y="613" class="title-text" text-anchor="middle">Job processors (Python)</text>
+  <text x="300" y="636" class="label-text" text-anchor="middle">one shared pool, takes from every queue</text>
+  <text x="300" y="656" class="note-text" text-anchor="middle">scales on queue length, up to a limit</text>
+  <line x1="110" y1="670" x2="490" y2="670" stroke="#90caf9" stroke-width="1"/>
+  <text x="120" y="694" class="step-text">1. Check for a saved result</text>
+  <text x="120" y="716" class="step-text">2. Select the model</text>
+  <text x="120" y="738" class="step-text">3. Get weather</text>
+  <text x="120" y="760" class="step-text">4. Calculate (in Ray)</text>
+  <text x="120" y="782" class="step-text">5. Save the result</text>
+  <text x="120" y="804" class="step-text">6. Confirm the message</text>
+
+  <!-- Job processors to database -->
+  <path d="M 520 610 L 1040 610 L 1040 322" class="flow" marker-end="url(#arrowhead)"/>
+  <text x="1052" y="540" class="arrow-label">result</text>
+
+  <!-- Job processors to weather service -->
+  <path d="M 520 734 L 710 734" class="flow" marker-end="url(#arrowhead)"/>
+  <text x="615" y="724" class="arrow-label" text-anchor="middle">wind for route</text>
+
+  <!-- Weather service (outside) -->
+  <rect x="720" y="684" width="360" height="100" rx="5" class="external"/>
+  <text x="900" y="716" class="title-text" text-anchor="middle">Weather service</text>
+  <text x="900" y="739" class="label-text" text-anchor="middle">outside; answers cached</text>
+  <text x="900" y="761" class="failure-label" text-anchor="middle">no answer: warning "no weather available"</text>
+
+  <!-- Job processors to Ray -->
+  <path d="M 300 830 L 300 900" class="flow" marker-end="url(#arrowhead)"/>
+  <text x="315" y="870" class="arrow-label">plan + weather out, fuel per leg and total back</text>
+
+  <!-- Ray -->
+  <rect x="80" y="910" width="440" height="112" rx="5" class="box ray-box"/>
+  <text x="300" y="942" class="title-text" text-anchor="middle">Ray</text>
+  <text x="300" y="965" class="label-text" text-anchor="middle">actors hold the models</text>
+  <text x="300" y="985" class="label-text" text-anchor="middle">tasks run the calculations</text>
+  <text x="300" y="1006" class="note-text" text-anchor="middle">scales with waiting work</text>
+
+  <!-- Ray to model storage -->
+  <path d="M 300 1022 L 300 1090" class="flow" marker-end="url(#arrowhead)"/>
+  <text x="315" y="1061" class="arrow-label">model for airline + aircraft type</text>
+
+  <!-- Model storage and catalogue (cylinder) -->
+  <path d="M 80 1114 L 80 1204 A 220 12 0 0 0 520 1204 L 520 1114" class="box storage-box"/>
+  <ellipse cx="300" cy="1114" rx="220" ry="12" class="box storage-box"/>
+  <text x="300" y="1154" class="title-text" text-anchor="middle">Model storage and catalogue</text>
+  <text x="300" y="1176" class="label-text" text-anchor="middle">(object storage)</text>
+  <text x="300" y="1196" class="note-text" text-anchor="middle">one area per airline, one model per type</text>
+
+  <!-- Trained models arrive (from outside) -->
+  <path d="M 700 1160 L 532 1160" class="flow" marker-end="url(#arrowhead)"/>
+  <text x="712" y="1156" class="arrow-label">trained models arrive</text>
+  <text x="712" y="1174" class="note-text">(from training, outside)</text>
+
+  <!-- Monitoring band -->
+  <rect x="80" y="1256" width="1000" height="54" rx="5" class="box monitoring-box"/>
+  <text x="104" y="1289" class="title-text">Monitoring</text>
+  <text x="206" y="1289" class="label-text">all components report here, per airline</text>
+
+  <!-- Legend -->
+  <g transform="translate(80, 1352)">
+    <text x="0" y="0" class="label-text" font-weight="bold">Legend</text>
+    <line x1="0" y1="20" x2="40" y2="20" class="flow" marker-end="url(#arrowhead)"/>
+    <text x="54" y="24" class="note-text">Normal flow</text>
+    <line x1="0" y1="44" x2="40" y2="44" class="failure" marker-end="url(#arrowhead-failure)"/>
+    <text x="54" y="48" class="note-text">Failure path (dashed)</text>
+    <rect x="0" y="60" width="40" height="20" rx="3" class="box dedicated-box"/>
+    <text x="54" y="74" class="note-text">Dedicated to one airline; everything else is shared</text>
+    <rect x="0" y="90" width="40" height="20" rx="3" class="external"/>
+    <text x="54" y="104" class="note-text">Outside the system</text>
+  </g>
+
+  <!-- Notes -->
+  <g transform="translate(560, 1352)">
+    <text x="0" y="0" class="label-text" font-weight="bold">Notes</text>
+    <text x="0" y="24" class="note-text">• The larger box shows its internal steps</text>
+    <text x="0" y="48" class="note-text">• Unconfirmed messages are delivered again</text>
+    <text x="0" y="72" class="note-text">• Scale: 25,000 models; peak of 1,000 events a second</text>
+  </g>
+</svg>
