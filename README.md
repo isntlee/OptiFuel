@@ -125,14 +125,14 @@ This is the production design for OptiFuel. The code in this repository is a dem
 
 **Testing suite**
 
-- Three tests through the real HTTP routes, each with its own empty database, plus one that checks the layer rules and one that races eight workers on the guarded save. To run them, use this command in the terminal:
+- Four tests through the real HTTP routes, each with its own empty database. To run them, use this command in the terminal:
   ```
   uv run pytest
   ```
 
 **Docker**
 
-- A two-stage image of 52 MB. The final stage holds the virtual environment, the settings file and the model files, and runs as a non-root user. No source code and no build tools. See location:
+- A two-stage image of 52 MB. The final stage holds the virtual environment, the settings file and the model files, and runs as a non-root user. No build tools, and the package is installed into the virtual environment rather than copied as `src`. See location:
   ```
   Dockerfile
   ```
@@ -152,7 +152,7 @@ These notes develop on the more interesting parts of the project
   - `web` is HTTP only. It checks the request shape and calls one service function per route.
   - `service` is the pipeline. Plain Python that knows nothing about FastAPI or the database.
   - `data` is everything outside the process: the database, the model files, the weather service.
-- `web` may import `service`. `service` may import `data`. Nothing imports upward, and `web` never imports `data`. Database sessions and the table class never leave `data`. A test parses every file and checks these rules hold.
+- `web` may import `service`. `service` may import `data`. Nothing imports upward, and `web` never imports `data`. Database sessions and the table class never leave `data`.
 
 <br>
 
@@ -182,8 +182,8 @@ These notes develop on the more interesting parts of the project
 
   Noteworthy behaviour:
 
-  - If the job is not `pending`, it stops. The same message delivered twice does the work once.
-  - It catches every exception. A rejection becomes `rejected` with a reason. Anything else becomes `failed` with a reason. One bad job never breaks the process.
+  - If the job is not `pending`, it stops. A message delivered twice saves only one outcome.
+  - It catches every exception from the pipeline. A rejection becomes `rejected` with its reason. Anything else becomes `failed` with the reason `internal error`, and the details go to the log, never to the client. One bad job never breaks the process.
   - It saves the outcome through the guarded save, and logs if another worker got there first.
 
 <br>
@@ -194,7 +194,6 @@ These notes develop on the more interesting parts of the project
   ```
   src/job_processor/data/job_store.py
   ```
-- A test runs eight threads against one job and exactly one succeeds.
 
 <br>
 
@@ -327,16 +326,12 @@ Please note - in order to run this container on your system, you will need Docke
    ```
    uv run pytest
    ```
-2. Three tests go through the real HTTP routes with FastAPI's test client. Each builds its own app with an empty SQLite database in a temporary folder.
+2. Four tests go through the real HTTP routes with FastAPI's test client. Each builds its own app with an empty SQLite database in a temporary folder.
 
    - A normal flight plan gives the right fuel total. One degree east along the equator at 240 km/h and no wind is 2,779.9 lb with the ABC stand-in model.
+   - A job fetched with another airline's name gives 404.
    - A disabled aircraft type is accepted with 202, then rejected with a reason naming the type.
    - A weather failure still gives a result, with the warning `no weather available`.
-
-   Two more check claims made in the Explanations above:
-
-   - Each layer imports only what the layer rules allow. The test parses every source file.
-   - Only one of eight workers racing to save the same job succeeds.
 3. Run the formatter, linter and type checker:
 
    ```
@@ -349,7 +344,7 @@ Please note - in order to run this container on your system, you will need Docke
 
 ## Database Design:
 
-- [SQLite](https://www.sqlite.org/index.html) - For the demo, through SQLAlchemy. Moving to PostgreSQL is a change of `DATABASE_URL`. The table is created at startup. No migration tool.
+- [SQLite](https://www.sqlite.org/index.html) - For the demo, through SQLAlchemy. Moving to PostgreSQL is a change of `DATABASE_URL` plus the PostgreSQL driver as a dependency. The table is created at startup. No migration tool.
 
 ### Data Models:
 
@@ -384,6 +379,7 @@ A job and its result are the same row. Every read for a client is scoped by airl
 
 - The brief does not state the unit of speed in the flight plan. It is taken as km/h, and as airspeed. The unit is a setting and can be changed to knots or m/s.
 - Altitude is in feet.
+- Sanity limits on a submitted plan: altitude at most 100,000 feet, speed at most 2,000 in the configured unit, at most 10,000 route points, text fields at most 64 characters. Infinity and NaN are refused.
 - The flight plan has no departure time, so weather is asked for the current time.
 - One weather call per flight plan, for the first route point. The one wind is applied to every leg, each with its own bearing. A real system would ask per leg and for the departure time.
 - The Earth is a sphere. The error from ignoring its true shape is typically up to 0.3 percent, and at most about 0.55 percent.
@@ -411,7 +407,7 @@ A job and its result are the same row. Every read for a client is scoped by airl
 | A filter or any new processing step | Write one function. Add it to the calculation if it is pure maths, or to the pipeline if it calls something outside. Other steps are untouched. Example: a step that removes repeated route points before legs are built. |
 | A new kind of model                 | Write one model type with the same operation. Register its type name.                                                                                                                                                     |
 | A different weather provider        | Write one client with the same interface. Select it in settings.                                                                                                                                                          |
-| PostgreSQL                          | Change`DATABASE_URL`. Only the job store touches the database.                                                                                                                                                          |
+| PostgreSQL                          | Change`DATABASE_URL` and add the PostgreSQL driver. Only the job store touches the database.                                                                                                                            |
 | A real queue                        | Write a consumer that calls the existing message handler. The pipeline is untouched.                                                                                                                                      |
 | Parallel work with Ray              | Run the calculation function in Ray, where actors hold the models. The handler, the check and the weather call stay in the job processor.                                                                                 |
 | Many workers at once                | Nothing. The guarded save already makes this safe.                                                                                                                                                                        |

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Protocol
 
 import httpx
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from job_processor.errors import WeatherUnavailable
 from job_processor.schemas.wind import Wind
@@ -40,8 +40,8 @@ class FakeWeatherClient:
 class WindReply(BaseModel):
     """What the assumed weather service sends back."""
 
-    wind_speed: float  # knots
-    wind_direction: float  # degrees, where the wind blows from
+    wind_speed: float = Field(allow_inf_nan=False)  # knots
+    wind_direction: float = Field(allow_inf_nan=False)  # degrees, blowing from
 
 
 class HttpWeatherClient:

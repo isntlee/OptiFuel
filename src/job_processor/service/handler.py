@@ -15,7 +15,7 @@ def handle_message(job_id: str, flight_plan: FlightPlan, shared: Shared) -> None
     if job is None:
         logger.error("Job %s not found", job_id)
         return
-    # The same message delivered twice does the work once.
+
     if job.status != "pending":
         logger.info("Job %s is already %s", job_id, job.status)
         return
@@ -25,8 +25,9 @@ def handle_message(job_id: str, flight_plan: FlightPlan, shared: Shared) -> None
         )
     except Rejected as error:
         outcome = JobOutcome(status="rejected", reason=str(error))
-    except Exception as error:
+    except Exception:
         logger.exception("Job %s failed", job_id)
-        outcome = JobOutcome(status="failed", reason=str(error))
+
+        outcome = JobOutcome(status="failed", reason="internal error")
     if not shared.job_store.save_outcome(job_id, outcome):
         logger.info("Job %s was already saved by another worker", job_id)

@@ -20,7 +20,7 @@ def create_app(
 ) -> FastAPI:
     """Build the app and the shared parts the layers need. Tests pass their own weather client."""
     settings = settings or Settings()
-    logging.basicConfig(level=settings.log_level)
+    logging.basicConfig(level=settings.log_level.upper())
     config = load_service_config(settings.config_path)
 
     shared = Shared(

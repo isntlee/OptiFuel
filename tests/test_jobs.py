@@ -67,6 +67,12 @@ def test_a_normal_flight_plan_gives_the_right_fuel_total(client: TestClient) -> 
     assert job["warnings"] == []
 
 
+def test_a_job_is_not_visible_to_another_airline(client: TestClient) -> None:
+    job_id = client.post("/v1/jobs", json=flight_plan()).json()["job_id"]
+    fetched = client.get(f"/v1/jobs/{job_id}", headers={"X-Airline": "XYZ"})
+    assert fetched.status_code == 404
+
+
 def test_a_disabled_aircraft_type_is_rejected(client: TestClient) -> None:
     job = submit_and_fetch(client, flight_plan(aircraft_type="A380"))
     assert job["status"] == "rejected"

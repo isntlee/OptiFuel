@@ -27,8 +27,8 @@ class JobRow(Base):
     warnings: Mapped[list[str]] = mapped_column(JSON)
     model_id: Mapped[str | None]
     model_version: Mapped[str | None]
-    created_at: Mapped[datetime] = mapped_column(DateTime)
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 def make_session_factory(database_url: str) -> sessionmaker[Session]:
