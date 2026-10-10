@@ -1,6 +1,6 @@
 # **OptiFuel**
 
-This is a FastAPI based job processor that estimates the fuel a flight will burn. A client submits a flight plan, the service works out the fuel for the route using that airline's own model and the current wind, and saves the result against a job ID. It is a proof of concept for the OptiFuel service: event-driven in shape, with one model per airline, and built so the parts that change in production can be swapped without touching the rest.
+OptiFuel is a proof of concept for a FastAPI service that estimates the fuel a flight will burn. An airline submits a flight plan and receives a job ID. The service works out the fuel for the route, using the airline's own model and the current wind, and saves the result against that job ID. It is event-driven, with one model per airline, and built so the parts that change in production can be swapped without touching the rest.
 
 <br>
 
@@ -20,7 +20,7 @@ This is a FastAPI based job processor that estimates the fuel a flight will burn
 
 ## Architecture:
 
-The production design for the OptiFuel service, Part 1 of the brief. The code in this repository is Part 2, the job processor: the "Job processors" box in this diagram, built so it can be dropped into this design.
+This is the production design for OptiFuel. The code in this repository is a demo build for one section, "Job processors", built so it can be dropped into this design.
 
 ![OptiFuel high-level architecture](optifuel_architecture.svg)
 
@@ -411,7 +411,7 @@ A job and its result are the same row. Every read for a client is scoped by airl
 | A filter or any new processing step | Write one function. Add it to the calculation if it is pure maths, or to the pipeline if it calls something outside. Other steps are untouched. Example: a step that removes repeated route points before legs are built. |
 | A new kind of model                 | Write one model type with the same operation. Register its type name.                                                                                                                                                     |
 | A different weather provider        | Write one client with the same interface. Select it in settings.                                                                                                                                                          |
-| PostgreSQL                          | Change `DATABASE_URL`. Only the job store touches the database.                                                                                                                                                          |
+| PostgreSQL                          | Change`DATABASE_URL`. Only the job store touches the database.                                                                                                                                                          |
 | A real queue                        | Write a consumer that calls the existing message handler. The pipeline is untouched.                                                                                                                                      |
 | Parallel work with Ray              | Run the calculation function in Ray, where actors hold the models. The handler, the check and the weather call stay in the job processor.                                                                                 |
 | Many workers at once                | Nothing. The guarded save already makes this safe.                                                                                                                                                                        |
