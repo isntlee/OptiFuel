@@ -1,0 +1,10 @@
+{
+  "flight_id": 123,
+  "airline": "ABC",
+  "aircraft_type": "B777",
+  "registration": "ABC-123",
+  "route": [
+    {"latitude": 41.405937004581695, "longitude": 2.1786054426600923, "altitude": 35000, "speed": 242.0},
+    {"latitude": 42.50637871605472, "longitude": 1.5218251539021441, "altitude": 35060, "speed": 263.3}
+  ]
+}
