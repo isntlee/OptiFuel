@@ -21,8 +21,8 @@ def run_pipeline(
 ) -> JobOutcome:
     """The four steps for one job. Raises Rejected; any other error means failed."""
     check_allowed(flight_plan, config)
-    wind, warnings = get_wind(flight_plan, weather_client)
     model = model_store.get(flight_plan.airline)
+    wind, warnings = get_wind(flight_plan, weather_client)
     result = calculate_fuel(flight_plan, wind, model, config.speed_unit)
     return JobOutcome(
         status="completed",
