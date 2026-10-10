@@ -1,0 +1,8 @@
+{
+  "note": "Stand-in for the demo. A fixed fuel flow, not a trained model.",
+  "model_id": "abc-standin",
+  "version": "1",
+  "airline": "ABC",
+  "type": "constant",
+  "fuel_flow_lb_per_hour": 6000.0
+}

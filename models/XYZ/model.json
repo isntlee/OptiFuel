@@ -1,0 +1,8 @@
+{
+  "note": "Stand-in for the demo. A fixed fuel flow, not a trained model.",
+  "model_id": "xyz-standin",
+  "version": "1",
+  "airline": "XYZ",
+  "type": "constant",
+  "fuel_flow_lb_per_hour": 5000.0
+}
