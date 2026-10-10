@@ -5,7 +5,7 @@ speed_unit = "km/h"
 enabled_aircraft_types = ["B777", "A320"]
 
 [airlines.ABC]
-model_path = "models/ABC/model.json"
+model_path = "resources/models/ABC/model.json"
 
 [airlines.XYZ]
-model_path = "models/XYZ/model.json"
+model_path = "resources/models/XYZ/model.json"

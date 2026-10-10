@@ -23,7 +23,7 @@ RUN useradd --create-home app
 WORKDIR /app
 COPY --from=builder /app/.venv ./.venv
 COPY config ./config
-COPY models ./models
+COPY resources/models ./resources/models
 # SQLite writes here, so the non-root user must own it.
 RUN mkdir storage && chown app:app storage
 

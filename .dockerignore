@@ -2,7 +2,7 @@
 .venv
 storage
 tests
-examples
+resources/examples
 __pycache__
 *.pyc
 .pytest_cache
