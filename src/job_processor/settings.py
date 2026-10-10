@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 
 SpeedUnit = Literal["km/h", "knots", "m/s"]
+FakeWeather = Literal["no_wind", "calm", "strong"]
 
 
 class AirlineConfig(BaseModel):
@@ -35,5 +36,5 @@ class Settings(BaseSettings):
     weather_api_url: str | None = None
     weather_api_key: str | None = None
     weather_timeout_seconds: float = 2.0
-    fake_weather: Literal["no_wind", "calm", "strong"] = "no_wind"
+    fake_weather: FakeWeather = "no_wind"
     log_level: str = "INFO"
