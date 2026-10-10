@@ -69,4 +69,15 @@ class JobStore:
 
 def to_job(row: JobRow) -> Job:
     """Turn a table row into plain data, so the table class never leaves this layer."""
-    return Job.model_validate(row, from_attributes=True)
+    job = Job.model_validate(row, from_attributes=True)
+    return job.model_copy(
+        update={
+            "created_at": as_utc(job.created_at),
+            "completed_at": as_utc(job.completed_at) if job.completed_at else None,
+        }
+    )
+
+
+def as_utc(time: datetime) -> datetime:
+    """Times are stored as UTC, but SQLite hands them back without a timezone."""
+    return time.replace(tzinfo=UTC) if time.tzinfo is None else time.astimezone(UTC)

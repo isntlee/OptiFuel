@@ -1,4 +1,8 @@
-from pydantic import BaseModel, Field
+from typing import Annotated
+
+from pydantic import BaseModel, Field, StringConstraints
+
+NonEmptyText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
 
 class RoutePoint(BaseModel):
@@ -12,7 +16,7 @@ class FlightPlan(BaseModel):
     """A flight to estimate fuel for. Fields not listed here are ignored."""
 
     flight_id: int
-    airline: str = Field(min_length=1)
-    aircraft_type: str = Field(min_length=1)
-    registration: str = Field(min_length=1)
+    airline: NonEmptyText
+    aircraft_type: NonEmptyText
+    registration: NonEmptyText
     route: list[RoutePoint] = Field(min_length=2)

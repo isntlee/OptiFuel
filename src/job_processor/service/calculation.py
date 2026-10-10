@@ -60,7 +60,9 @@ def total(
 ) -> FuelResult:
     """Add up fuel, distance, and time over the legs."""
     return FuelResult(
-        total_fuel_lb=sum(flow * time for flow, time in zip(fuel_flows, times_hours)),
+        total_fuel_lb=sum(
+            flow * time for flow, time in zip(fuel_flows, times_hours, strict=True)
+        ),
         total_distance_nm=sum(leg.distance_nautical_miles for leg in legs),
         total_time_hours=sum(times_hours),
     )
