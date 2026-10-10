@@ -27,7 +27,6 @@ This is a FastAPI based job processor that estimates the fuel a flight will burn
   src/job_processor/web
   ```
 - Submit returns at once with a job ID and the status `pending`. The work happens after the reply. Fetch the result with the job ID and the airline's name in the `X-Airline` header. A job that belongs to another airline, or does not exist, gives 404.
-- FastAPI's generated documentation is at `/docs` when the service is running.
 - Submit the example flight plan:
 
   ```
@@ -62,7 +61,8 @@ This is a FastAPI based job processor that estimates the fuel a flight will burn
     "completed_at": "2026-10-10T19:43:25.103464Z"
   }
   ```
-
+- FastAPI's generated documentation is at `/docs` when the service is running.
+  
 **Job statuses**
 
 - `pending` - Accepted, not yet processed.
