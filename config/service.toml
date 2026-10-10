@@ -1,0 +1,11 @@
+# Settings that are the same in every environment.
+# Secrets and environment-specific values come from environment variables instead.
+
+speed_unit = "km/h"
+enabled_aircraft_types = ["B777", "A320"]
+
+[airlines.ABC]
+model_path = "models/ABC/model.json"
+
+[airlines.XYZ]
+model_path = "models/XYZ/model.json"
